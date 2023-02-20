@@ -30,14 +30,14 @@
 import rospy
 from geometry_msgs.msg import Twist
 import sys, select, os
+import cv2
+import numpy as np
+from urllib.request import urlopen
+
 if os.name == 'nt':
   import msvcrt
 else:
   import tty, termios
-
-import cv2
-import numpy as np
-from urllib.request import urlopen
 
 url = "http://192.168.0.199:8080/?action=stream"
 stream = urlopen(url)
@@ -83,7 +83,6 @@ while True:
                     center_y = int(detection[1] * height)
                     w = int(detection[2] * width)
                     h = int(detection[3] * height)
-                    # 좌표
                     x = int(center_x - w / 2)
                     y = int(center_y - h / 2)
                     boxes.append([x, y, w, h])
@@ -103,17 +102,18 @@ while True:
                     cv2.rectangle(img, (x, y), (x + w, y + h), color, 2)
                     cv2.putText(img, label, (x, y + 30), font, 3, color, 3)
 
-        print("현재 사람 수:", howManyPerson)
-        cv2.putText(img, f"person: {howManyPerson}", (10, 50), font, 3, [0, 0, 0], 3)
+        # print("현재 사람 수:", howManyPerson)
+        # cv2.putText(img, f"person: {howManyPerson}", (10, 50), font, 3, [0, 0, 0], 3)
 
-        # cv2.imshow("stream", img)
+        cv2.imshow("stream", img)
         howManyPerson = 0
         key = cv2.waitKey(1)
         if key == 27:
             # if you push the ESC key, 
             break
 
-# cv2.destroyAllWindows()
+cv2.destroyAllWindows()
+
 
 
 
@@ -126,7 +126,24 @@ LIN_VEL_STEP_SIZE = 0.05
 ANG_VEL_STEP_SIZE = 0.1
 
 msg = """
- 일단 테스트용임.
+Control Your OMO Robot!
+---------------------------
+Moving around:
+        w
+   a    s    d
+        x
+
+w/x : increase/decrease linear velocity (~ 1.2 m/s)
+a/d : increase/decrease angular velocity (~ 1.8)
+
+space key, s : force stop
+
+CTRL-C to quit
+
+
+test labels
+
+
 """
 
 e = """
@@ -196,45 +213,16 @@ if __name__=="__main__":
     try:
         print(msg)
         while(1):
-
-            # key = getKey()
-            # if key == 'w' :
-            #     target_linear_vel = checkLinearLimitVelocity(target_linear_vel + LIN_VEL_STEP_SIZE)
-            #     status = status + 1
-            #     print(vels(target_linear_vel,target_angular_vel))
-            # elif key == 'x' :
-            #     target_linear_vel = checkLinearLimitVelocity(target_linear_vel - LIN_VEL_STEP_SIZE)
-            #     status = status + 1
-            #     print(vels(target_linear_vel,target_angular_vel))
-            # elif key == 'a' :
-            #     target_angular_vel = checkAngularLimitVelocity(target_angular_vel + ANG_VEL_STEP_SIZE)
-            #     status = status + 1
-            #     print(vels(target_linear_vel,target_angular_vel))
-            # elif key == 'd' :
-            #     target_angular_vel = checkAngularLimitVelocity(target_angular_vel - ANG_VEL_STEP_SIZE)
-            #     status = status + 1
-            #     print(vels(target_linear_vel,target_angular_vel))
-            # elif key == ' ' or key == 's' :
-            #     target_linear_vel   = 0.0
-            #     control_linear_vel  = 0.0
-            #     target_angular_vel  = 0.0
-            #     control_angular_vel = 0.0
-            #     print(vels(target_linear_vel, target_angular_vel))
-            # else:
-            #     if (key == '\x03'):
-            #         break
-
-
-
-          
-            
+            key = getKey()
             if howManyPerson == 0 :
-                target_linear_vel = checkLinearLimitVelocity(target_linear_vel + LIN_VEL_STEP_SIZE)
-                status = status + 1
+                target_linear_vel = 1.3
+                # status = status + 1
                 print(vels(target_linear_vel,target_angular_vel))
             elif howManyPerson == 1 :
-                target_linear_vel = checkLinearLimitVelocity(target_linear_vel - LIN_VEL_STEP_SIZE)
-                status = status + 1
+                target_linear_vel   = 0.0
+                control_linear_vel  = 0.0
+                target_angular_vel  = 0.0
+                control_angular_vel = 0.0
                 print(vels(target_linear_vel,target_angular_vel))
             elif key == 'a' :
                 target_angular_vel = checkAngularLimitVelocity(target_angular_vel + ANG_VEL_STEP_SIZE)
@@ -253,7 +241,6 @@ if __name__=="__main__":
             else:
                 if (key == '\x03'):
                     break
-
 
             if status == 20 :
                 print(msg)
